@@ -34,21 +34,21 @@ A modern, responsive, real-time digital clock and world clock dashboard built wi
 ## 🚀 Live Demo & Usage
 
 ### 1. View Locally
-Simply clone the repository and open `digital_clock.html` (or `index.html`) in any modern web browser:
+Simply clone the repository and open  `index.html` in any modern web browser:
 
 ```bash
-git clone [https://github.com/Minahil-CS/Digital-Clock-SpireX.git](https://github.com/Minahil-CS/Digital-Clock-SpireX.git)
-cd Digital-Clock-SpireX
-open digital_clock.html
+git clone https://github.com/Minahil-CS/Digital-Clock.git
+cd Digital-Clock
+open index.html
 ```
 ## 2. Live GitHub Pages Link
 Check out the live deployment here:
 
-👉 https://minahil-cs.github.io/Digital-Clock-SpireX/
-
-📂 Project Structure
-├── digital_clock.html    # Single-file architecture containing structured HTML, CSS styles, and JS logic
-└── README.md            # Technical documentation
-
+👉 https://minahil-cs.github.io/Digital-Clock/
+```
+Digital-Clock/
+├── index.html       # Single-file architecture containing structured HTML, CSS styles, and JS logic
+└── README.md        # Technical documentation
+```
 ---
 > **Author:** Minahil Fatima ([@Minahil-CS](https://github.com/Minahil-CS))  
