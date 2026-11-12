@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 6: Digital Clock Dashboard | SpireX Foundation</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .tabular-nums-strict {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Color Theme Presets via CSS Variables */
+        :root[data-theme="cyber"] {
+            --primary-accent: #06b6d4; /* Cyan 500 */
+            --secondary-accent: #a855f7; /* Purple 500 */
+            --glow-color: rgba(6, 182, 212, 0.35);
+            --card-border: rgba(6, 182, 212, 0.3);
+        }
+
+        :root[data-theme="sunset"] {
+            --primary-accent: #f97316; /* Orange 500 */
+            --secondary-accent: #ec4899; /* Pink 500 */
+            --glow-color: rgba(249, 115, 22, 0.35);
+            --card-border: rgba(249, 115, 22, 0.3);
+        }
+
+        :root[data-theme="matrix"] {
+            --primary-accent: #10b981; /* Emerald 500 */
+            --secondary-accent: #84cc16; /* Lime 500 */
+            --glow-color: rgba(16, 185, 129, 0.35);
+            --card-border: rgba(16, 185, 129, 0.3);
+        }
+
+        :root[data-theme="aurora"] {
+            --primary-accent: #3b82f6; /* Blue 500 */
+            --secondary-accent: #14b8a6; /* Teal 500 */
+            --glow-color: rgba(59, 130, 246, 0.35);
+            --card-border: rgba(59, 130, 246, 0.3);
+        }
+
+        /* Theme utility bindings */
+        .text-accent-primary { color: var(--primary-accent); }
+        .text-accent-secondary { color: var(--secondary-accent); }
+        .bg-accent-primary { background-color: var(--primary-accent); }
+        .border-accent-theme { border-color: var(--card-border); }
+        .glow-effect { filter: drop-shadow(0 0 18px var(--glow-color)); }
+
+        /* Blinking colon animation */
+        @keyframes colonBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.25; }
+        }
+        .colon-blink {
+            animation: colonBlink 1s infinite ease-in-out;
+        }
+
+        /* Glassmorphism card */
+        .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        /* Ring visualizer transitions */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s ease-in-out, stroke 0.5s ease;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-4 sm:p-6 bg-slate-950 text-slate-100 relative overflow-x-hidden font-sans selection:bg-cyan-500 selection:text-black">
+
+    <!-- Ambient Glow Background Blobs -->
+    <div id="ambientBlob1" class="fixed top-10 -left-20 w-80 h-80 sm:w-96 sm:h-96 rounded-full blur-[100px] pointer-events-none opacity-30 transition-colors duration-700 bg-accent-primary"></div>
+    <div id="ambientBlob2" class="fixed bottom-10 -right-20 w-80 h-80 sm:w-96 sm:h-96 rounded-full blur-[100px] pointer-events-none opacity-25 transition-colors duration-700 bg-accent-primary"></div>
+
+    <!-- Header Section -->
+    <header class="w-full max-w-5xl flex flex-wrap items-center justify-between gap-3 z-10 pt-2 pb-4">
+        <div class="flex items-center gap-3">
+            <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl text-xs sm:text-sm font-medium glass-card border border-accent-theme shadow-lg">
+                <span class="relative flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+                </span>
+                <span class="tracking-wide text-slate-200">Task 6: World Digital Clock</span>
+                <span class="text-slate-600">|</span>
+                <span class="font-semibold text-accent-primary">SpireX Foundation</span>
+            </div>
+        </div>
+
+        <!-- Interactive Control Bar -->
+        <div class="flex items-center gap-2 flex-wrap">
+            <!-- Theme Selector -->
+            <div class="inline-flex items-center gap-1.5 p-1 rounded-2xl glass-card border border-slate-800">
+                <button type="button" data-theme-btn="cyber" title="Cyber Neon" class="w-7 h-7 rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-500 transition-transform hover:scale-110 active:scale-95 cursor-pointer ring-2 ring-white/20"></button>
+                <button type="button" data-theme-btn="sunset" title="Sunset Gold" class="w-7 h-7 rounded-xl bg-gradient-to-tr from-orange-500 to-pink-500 transition-transform hover:scale-110 active:scale-95 cursor-pointer"></button>
+                <button type="button" data-theme-btn="matrix" title="Matrix Green" class="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-500 to-lime-500 transition-transform hover:scale-110 active:scale-95 cursor-pointer"></button>
+                <button type="button" data-theme-btn="aurora" title="Midnight Aurora" class="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-500 to-teal-500 transition-transform hover:scale-110 active:scale-95 cursor-pointer"></button>
+            </div>
+
+            <!-- Audio Tick Toggle Button -->
+            <button 
+                id="audioToggleBtn" 
+                type="button" 
+                aria-label="Toggle Audio Sound Effects"
+                class="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs sm:text-sm font-medium glass-card border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition-all duration-200 active:scale-95 cursor-pointer"
+            >
+                <svg id="audioOffIcon" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+                </svg>
+                <svg id="audioOnIcon" class="w-4 h-4 text-cyan-400 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                </svg>
+                <span id="audioLabel" class="hidden sm:inline">Audio Off</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Section -->
+    <main class="w-full max-w-5xl my-auto z-10 py-4 space-y-6">
+
+        <!-- Hero Local Digital Clock -->
+        <div class="relative rounded-3xl glass-card border border-accent-theme shadow-2xl p-6 sm:p-10 md:p-12 transition-all duration-300">
+            
+            <!-- Card Header Meta -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pb-6 border-b border-slate-800/80">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-2 rounded-xl bg-slate-800/80 text-accent-primary">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xs uppercase tracking-wider font-semibold text-slate-400">Primary Local Timezone</h2>
+                        <p id="localTimezone" class="text-sm font-semibold text-slate-200">Detecting location...</p>
+                    </div>
+                </div>
+
+                <!-- Date Badge -->
+                <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs sm:text-sm font-medium text-slate-300">
+                    <span id="localDay" class="font-bold text-accent-primary">--</span>
+                    <span class="text-slate-600">&bull;</span>
+                    <span id="localDate">-- ---- ----</span>
+                </div>
+            </div>
+
+            <!-- Main Time Display Area -->
+            <div class="relative flex flex-col md:flex-row items-center justify-center gap-8 my-8">
+                
+                <!-- Circular Seconds Arc Visualizer (Interactive Canvas / SVG Ring) -->
+                <div class="relative flex items-center justify-center">
+                    <svg class="w-64 h-64 sm:w-80 sm:h-80 glow-effect" viewBox="0 0 200 200">
+                        <!-- Background Circle Track -->
+                        <circle class="text-slate-800/80" stroke-width="8" stroke="currentColor" fill="transparent" r="86" cx="100" cy="100"></circle>
+                        <!-- Dynamic Progress Circle Arc -->
+                        <circle id="secondsRing" class="progress-ring__circle text-accent-primary" stroke-width="8" stroke-dasharray="540.35" stroke-dashoffset="540.35" stroke-linecap="round" stroke="currentColor" fill="transparent" r="86" cx="100" cy="100"></circle>
+                    </svg>
+
+                    <!-- Digital Time Centered Inside Ring -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center font-mono tabular-nums-strict select-none">
+                        
+                        <!-- Main Time Row (Strict 12-Hour Format) -->
+                        <div class="flex items-baseline justify-center">
+                            <span id="localHours" class="text-4xl sm:text-6xl font-extrabold text-white tracking-tight drop-shadow-md">00</span>
+                            <span class="colon-blink text-3xl sm:text-5xl font-bold text-accent-primary mx-0.5 sm:mx-1">:</span>
+                            <span id="localMinutes" class="text-4xl sm:text-6xl font-extrabold text-white tracking-tight drop-shadow-md">00</span>
+                            <span class="colon-blink text-3xl sm:text-5xl font-bold text-accent-primary mx-0.5 sm:mx-1">:</span>
+                            <span id="localSeconds" class="text-3xl sm:text-5xl font-bold text-accent-secondary drop-shadow-md">00</span>
+                        </div>
+
+                        <!-- Permanent AM / PM Badge -->
+                        <div class="mt-2">
+                            <span id="localAmpm" class="px-3 py-1 rounded-xl text-xs sm:text-sm font-extrabold tracking-widest uppercase bg-indigo-500/10 text-accent-primary border border-accent-theme shadow-inner">
+                                AM
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer Stats Inside Main Card -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-800/80 text-center text-xs text-slate-400">
+                <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/70">
+                    <span class="block text-slate-500 text-[10px] uppercase font-semibold">Format</span>
+                    <span class="font-mono text-slate-200 font-bold">12-Hour Standard</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/70">
+                    <span class="block text-slate-500 text-[10px] uppercase font-semibold">Indicator</span>
+                    <span class="font-mono text-accent-primary font-bold">AM/PM Active</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/70">
+                    <span class="block text-slate-500 text-[10px] uppercase font-semibold">Update Speed</span>
+                    <span class="font-mono text-emerald-400 font-bold">1000ms (Realtime)</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/70">
+                    <span class="block text-slate-500 text-[10px] uppercase font-semibold">UTC Offset</span>
+                    <span id="utcOffset" class="font-mono text-slate-200 font-bold">UTC +00:00</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- International World Clocks Section -->
+        <section>
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-accent-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.05 10.9a10 10 0 0119.9 0M2.05 13.1a10 10 0 0019.9 0M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"></path>
+                    </svg>
+                    <h3 class="text-base font-bold text-slate-100 tracking-wide">Live International World Clocks</h3>
+                </div>
+                <span class="text-xs text-slate-400 font-medium">Real-time Global Sync</span>
+            </div>
+
+            <!-- Grid of World Clock Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4" id="worldClocksGrid">
+                <!-- Cards injected dynamically via JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Submission Info -->
+    <footer class="w-full max-w-5xl text-center z-10 pt-4 pb-2 border-t border-slate-900">
+        <p class="text-xs text-slate-500">
+            Task 6 Submission &bull; Developed by <span class="font-semibold text-slate-300">Program Operation Associate</span> &bull; <span class="text-accent-primary font-medium">SpireX Foundation</span>
+        </p>
+    </footer>
+
+    <!-- Logic & Functionality -->
+    <script>
+        (function() {
+            'use strict';
+
+            // Theme Preset Configurations
+            const THEMES = {
+                cyber: { primary: '#06b6d4', secondary: '#a855f7' },
+                sunset: { primary: '#f97316', secondary: '#ec4899' },
+                matrix: { primary: '#10b981', secondary: '#84cc16' },
+                aurora: { primary: '#3b82f6', secondary: '#14b8a6' }
+            };
+
+            // Key Global Cities Configuration
+            const WORLD_CITIES = [
+                { name: 'Pakistan', zone: 'Asia/Karachi', flag: '🇵🇰' },
+                { name: 'London / GMT', zone: 'Europe/London', flag: '🇬🇧' },
+                { name: 'New York / EST', zone: 'America/New_York', flag: '🇺🇸' },
+                { name: 'Tokyo / JST', zone: 'Asia/Tokyo', flag: '🇯🇵' },
+                { name: 'Dubai / GST', zone: 'Asia/Dubai', flag: '🇦🇪' }
+            ];
+
+            // DOM Elements
+            const localHoursEl = document.getElementById('localHours');
+            const localMinutesEl = document.getElementById('localMinutes');
+            const localSecondsEl = document.getElementById('localSeconds');
+            const localAmpmEl = document.getElementById('localAmpm');
+            const localDayEl = document.getElementById('localDay');
+            const localDateEl = document.getElementById('localDate');
+            const localTimezoneEl = document.getElementById('localTimezone');
+            const utcOffsetEl = document.getElementById('utcOffset');
+            const secondsRing = document.getElementById('secondsRing');
+            const worldClocksGrid = document.getElementById('worldClocksGrid');
+
+            // Audio & Controls
+            const audioToggleBtn = document.getElementById('audioToggleBtn');
+            const audioOnIcon = document.getElementById('audioOnIcon');
+            const audioOffIcon = document.getElementById('audioOffIcon');
+            const audioLabel = document.getElementById('audioLabel');
+            let isAudioEnabled = false;
+            let audioCtx = null;
+
+            // Ring calculation circumference (2 * PI * 86 = ~540.35)
+            const RING_CIRCUMFERENCE = 2 * Math.PI * 86;
+
+            // Helper: Pad numbers with leading zero
+            const padZero = (n) => (n < 10 ? '0' + n : String(n));
+
+            // Initialize Audio Synthesizer via Web Audio API for clean tick sound
+            function playFuturisticTick() {
+                if (!isAudioEnabled) return;
+                try {
+                    if (!audioCtx) {
+                        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume();
+                    }
+
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.03);
+
+                    gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.03);
+                } catch (e) {
+                    console.warn('Audio tick failed:', e);
+                }
+            }
+
+            // Audio Toggle Logic
+            audioToggleBtn.addEventListener('click', () => {
+                isAudioEnabled = !isAudioEnabled;
+                if (isAudioEnabled) {
+                    audioOnIcon.classList.remove('hidden');
+                    audioOffIcon.classList.add('hidden');
+                    audioLabel.textContent = 'Audio On';
+                    playFuturisticTick();
+                } else {
+                    audioOnIcon.classList.add('hidden');
+                    audioOffIcon.classList.remove('hidden');
+                    audioLabel.textContent = 'Audio Off';
+                }
+            });
+
+            // Theme Switcher Logic
+            function setTheme(themeName) {
+                document.documentElement.setAttribute('data-theme', themeName);
+                document.querySelectorAll('[data-theme-btn]').forEach(btn => {
+                    if (btn.getAttribute('data-theme-btn') === themeName) {
+                        btn.classList.add('ring-2', 'ring-white');
+                    } else {
+                        btn.classList.remove('ring-2', 'ring-white');
+                    }
+                });
+            }
+
+            document.querySelectorAll('[data-theme-btn]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    setTheme(btn.getAttribute('data-theme-btn'));
+                });
+            });
+
+            // Initialize World Clock Cards DOM structure
+            function initWorldClockCards() {
+                worldClocksGrid.innerHTML = '';
+                WORLD_CITIES.forEach((city, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'glass-card p-4 rounded-2xl border border-slate-800/80 hover:border-slate-700 transition-all duration-300';
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
+                                <span>${city.flag}</span> ${city.name}
+                            </span>
+                            <span id="worldAmpm-${idx}" class="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-slate-800 text-accent-primary border border-slate-700 uppercase">
+                                --
+                            </span>
+                        </div>
+                        <div class="font-mono tabular-nums-strict flex items-baseline gap-1 my-1">
+                            <span id="worldTime-${idx}" class="text-2xl font-bold text-white">00:00:00</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 font-medium truncate" id="worldDate-${idx}">
+                            Loading...
+                        </div>
+                    `;
+                    worldClocksGrid.appendChild(card);
+                });
+            }
+
+            // Detect Local Timezone Info
+            function detectLocalTimezone() {
+                try {
+                    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    localTimezoneEl.textContent = tz ? tz.replace(/_/g, ' ') : 'Local Time';
+
+                    const date = new Date();
+                    const offsetMinutes = -date.getTimezoneOffset();
+                    const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60);
+                    const offsetMinsRemainder = Math.abs(offsetMinutes) % 60;
+                    const sign = offsetMinutes >= 0 ? '+' : '-';
+                    utcOffsetEl.textContent = `UTC ${sign}${padZero(offsetHours)}:${padZero(offsetMinsRemainder)}`;
+                } catch (e) {
+                    localTimezoneEl.textContent = 'Local Time';
+                }
+            }
+
+            // Main Clock Update Tick Routine
+            function tick() {
+                const now = new Date();
+
+                // --- 1. Local Time (Strict 12-Hour with AM/PM) ---
+                let rawHours = now.getHours();
+                const minutes = now.getMinutes();
+                const seconds = now.getSeconds();
+                const ampm = rawHours >= 12 ? 'PM' : 'AM';
+
+                let hours12 = rawHours % 12;
+                hours12 = hours12 ? hours12 : 12; // convert 0 to 12
+
+                localHoursEl.textContent = padZero(hours12);
+                localMinutesEl.textContent = padZero(minutes);
+                localSecondsEl.textContent = padZero(seconds);
+                localAmpmEl.textContent = ampm;
+
+                // Local Date Info
+                const dayOptions = { weekday: 'long' };
+                const dateOptions = { day: '2-digit', month: 'short', year: 'numeric' };
+                localDayEl.textContent = now.toLocaleDateString('en-US', dayOptions);
+                localDateEl.textContent = now.toLocaleDateString('en-US', dateOptions);
+
+                // Seconds Ring Offset Calculation
+                const ringOffset = RING_CIRCUMFERENCE - (seconds / 60) * RING_CIRCUMFERENCE;
+                secondsRing.style.strokeDashoffset = ringOffset;
+
+                // --- 2. World Clocks (Strict 12-Hour Format) ---
+                WORLD_CITIES.forEach((city, idx) => {
+                    try {
+                        const timeFormatter = new Intl.DateTimeFormat('en-US', {
+                            timeZone: city.zone,
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: true
+                        });
+                        const dateFormatter = new Intl.DateTimeFormat('en-US', {
+                            timeZone: city.zone,
+                            weekday: 'short',
+                            day: '2-digit',
+                            month: 'short'
+                        });
+
+                        const parts = timeFormatter.formatToParts(now);
+                        let h = '00', m = '00', s = '00', dayPeriod = 'AM';
+
+                        parts.forEach(p => {
+                            if (p.type === 'hour') h = p.value;
+                            if (p.type === 'minute') m = p.value;
+                            if (p.type === 'second') s = p.value;
+                            if (p.type === 'dayPeriod') dayPeriod = p.value.toUpperCase();
+                        });
+
+                        const timeEl = document.getElementById(`worldTime-${idx}`);
+                        const ampmEl = document.getElementById(`worldAmpm-${idx}`);
+                        const dateEl = document.getElementById(`worldDate-${idx}`);
+
+                        if (timeEl) timeEl.textContent = `${h}:${m}:${s}`;
+                        if (ampmEl) ampmEl.textContent = dayPeriod;
+                        if (dateEl) dateEl.textContent = dateFormatter.format(now);
+                    } catch (e) {
+                        console.error(`Error calculating time for ${city.name}:`, e);
+                    }
+                });
+
+                // Play optional audio tick sound
+                playFuturisticTick();
+            }
+
+            // Initialization
+            setTheme('cyber');
+            initWorldClockCards();
+            detectLocalTimezone();
+            tick();
+            setInterval(tick, 1000);
+
+        })();
+    </script>
+</body>
+</html>
